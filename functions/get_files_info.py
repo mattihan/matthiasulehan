@@ -1,6 +1,9 @@
 import os
+from security import is_permitted_path, is_dir
 
 
+@is_permitted_path
+@is_dir
 def get_files_info(working_directory, directory="."):
     absolute_path = os.path.join(working_directory, directory)
     if not os.path.abspath(absolute_path).startswith(
