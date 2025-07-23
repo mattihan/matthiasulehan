@@ -1,6 +1,7 @@
 import security
 import os
 import subprocess
+from google.genai import types
 
 
 @security.is_permitted_path("execute")
@@ -26,3 +27,18 @@ def run_python_file(working_directory, file_path, args=[]):
     if completed.returncode != 0:
         formatted.append(f"\nProcess exited with code {completed.returncode}")
     return "\n".join(formatted) if formatted else "No output produced"
+
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Executes the python file with the arguments provided and returns the output, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "args": types.Schema(
+                type=types.Type.STRING,
+                description="The arguments to supply to the python file when executed",
+            ),
+        },
+    ),
+)

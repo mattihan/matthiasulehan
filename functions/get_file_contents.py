@@ -1,11 +1,11 @@
 import os
-from security import is_permitted_path, is_file
-
+import security
+from google.genai import types
 from config import TEXT_LIMIT
 
 
-@is_permitted_path
-@is_file
+@security.is_permitted_path
+@security.is_file
 def get_file_contents(working_directory, file):
     file_path = os.path.join(working_directory, file)
     try:
@@ -17,3 +17,18 @@ def get_file_contents(working_directory, file):
 
     except Exception as e:
         return f"Error: {e}"
+
+
+schema_get_files_contents = types.FunctionDeclaration(
+    name="get_files_contents",
+    description="Reads the contents of a file in the specified directory, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file": types.Schema(
+                type=types.Type.STRING,
+                description="The file to read from, relative to the working directory.",
+            ),
+        },
+    ),
+)
