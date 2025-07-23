@@ -8,7 +8,10 @@ class SecurityFunctionArgs:
 
 
 def security_decorator_generator(
-    rule, error=lambda _: Exception("Rule condition triggered")
+    rule,
+    error=(
+        lambda *args: f"Error: Permission denied for {args[SecurityFunctionArgs.FILE_PATH]} at {args[SecurityFunctionArgs.ABSOLUTE_PATH]}"
+    ),
 ):
     def outer(func):
         def inner(*args, **kwargs):
