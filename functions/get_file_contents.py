@@ -6,8 +6,8 @@ from config import TEXT_LIMIT
 
 @security.is_permitted_path
 @security.is_file
-def get_file_contents(working_directory, file):
-    file_path = os.path.join(working_directory, file)
+def get_file_contents(working_directory, file_path):
+    file_path = os.path.join(working_directory, file_path)
     try:
         with open(file_path, encoding="utf-8") as contents:
             text = contents.read()
@@ -19,13 +19,13 @@ def get_file_contents(working_directory, file):
         return f"Error: {e}"
 
 
-schema_get_files_contents = types.FunctionDeclaration(
-    name="get_files_contents",
+schema_get_file_contents = types.FunctionDeclaration(
+    name="get_file_contents",
     description="Reads the contents of a file in the specified directory, constrained to the working directory.",
     parameters=types.Schema(
         type=types.Type.OBJECT,
         properties={
-            "file": types.Schema(
+            "file_path": types.Schema(
                 type=types.Type.STRING,
                 description="The file to read from, relative to the working directory.",
             ),

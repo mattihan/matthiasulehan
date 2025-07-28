@@ -31,13 +31,17 @@ def run_python_file(working_directory, file_path, args=[]):
 
 schema_run_python_file = types.FunctionDeclaration(
     name="run_python_file",
-    description="Executes the python file with the arguments provided and returns the output, constrained to the working directory.",
+    description="Executes the python file and returns the output, constrained to the working directory.",
     parameters=types.Schema(
         type=types.Type.OBJECT,
         properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The file to execute, relative to the working directory.",
+            ),
             "args": types.Schema(
                 type=types.Type.STRING,
-                description="The arguments to supply to the python file when executed",
+                description="The optional arguments to supply to the python file when executed.",
             ),
         },
     ),
