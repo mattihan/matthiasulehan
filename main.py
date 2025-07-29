@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from config import SYSTEM_PROMPT, MAX_ITERATIONS
@@ -5,6 +6,14 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from call_function import call_function, available_functions
+
+
+class _NoToolNoise(logging.Filter):
+    def filter(self, record: logging.LogRecord):
+        return record.getMessage().strip().startswith("Warning") == False
+
+
+logging.getLogger("google_genai.types").addFilter(_NoToolNoise())
 
 
 def add_verbose(func):
@@ -56,6 +65,8 @@ def query_bot(client, messages, verbose, limit=0):
             new_messages.append(candidate.content)
     if not response.function_calls:
         return response.text
+    else:
+        print(response.text)
     new_messages.append(handle_function_calls(response, verbose))
     return query_bot(
         client,
