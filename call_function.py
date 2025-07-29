@@ -21,10 +21,8 @@ func_dict = {
 
 
 def call_function(func, verbose):
-    print(
-        " - Calling function:",
-        func.name if not verbose else f"{func.name}({func.args})",
-    )
+    if verbose:
+        print(f" - Calling function: {func.name}({func.args})")
 
     if func.name not in func_dict:
         return get_function_response_content(
