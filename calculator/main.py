@@ -14,6 +14,7 @@ def main():
         return
 
     expression = " ".join(sys.argv[1:])
+    #expression = "3 + 2 * 7" #Removed hardcoded expression
     try:
         result = calculator.evaluate(expression)
         to_print = render(expression, result)

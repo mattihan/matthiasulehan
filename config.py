@@ -1,6 +1,6 @@
 TEXT_LIMIT = 10_000
 WORKING_DIRECTORY = "./calculator"
-MAX_ITERATIONS = 20
+MAX_ITERATIONS = 200
 
 SYSTEM_PROMPT = """
 You are a helpful AI coding agent.

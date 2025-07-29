@@ -20,43 +20,35 @@ class Calculator:
         if not expression or expression.isspace():
             return None
         tokens = expression.strip().split()
-        return self._evaluate_infix(tokens)
+        return self._evaluate_expression(tokens)
 
-    def _evaluate_infix(self, tokens):
-        values = []
-        operators = []
-
-        for token in tokens:
-            if token in self.operators:
-                while (
-                    operators
-                    and operators[-1] in self.operators
-                    and self.precedence[operators[-1]] >= self.precedence[token]
-                ):
-                    self._apply_operator(operators, values)
-                operators.append(token)
+    def _evaluate_expression(self, tokens):
+        # Multiplication and Division
+        i = 1
+        while i < len(tokens) - 1:
+            if tokens[i] == "*":
+                result = float(tokens[i - 1]) * float(tokens[i + 1])
+                tokens = tokens[: i - 1] + [str(result)] + tokens[i + 2 :]
+                i = 1  # Reset index to re-evaluate from the beginning
+            elif tokens[i] == "/":
+                result = float(tokens[i - 1]) / float(tokens[i + 1])
+                tokens = tokens[: i - 1] + [str(result)] + tokens[i + 2 :]
+                i = 1  # Reset index
             else:
-                try:
-                    values.append(float(token))
-                except ValueError:
-                    raise ValueError(f"invalid token: {token}")
+                i += 1
 
-        while operators:
-            self._apply_operator(operators, values)
+        # Addition and Subtraction
+        i = 1
+        while i < len(tokens) - 1:
+            if tokens[i] == "+":
+                result = float(tokens[i - 1]) + float(tokens[i + 1])
+                tokens = tokens[: i - 1] + [str(result)] + tokens[i + 2 :]
+                i = 1  # Reset index
+            elif tokens[i] == "-":
+                result = float(tokens[i - 1]) - float(tokens[i + 1])
+                tokens = tokens[: i - 1] + [str(result)] + tokens[i + 2 :]
+                i = 1  # Reset index
+            else:
+                i += 1
 
-        if len(values) != 1:
-            raise ValueError("invalid expression")
-
-        return values[0]
-
-    def _apply_operator(self, operators, values):
-        if not operators:
-            return
-
-        operator = operators.pop()
-        if len(values) < 2:
-            raise ValueError(f"not enough operands for operator {operator}")
-
-        b = values.pop()
-        a = values.pop()
-        values.append(self.operators[operator](a, b))
+        return float(tokens[0])
