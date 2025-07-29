@@ -1,11 +1,12 @@
 import os
+from config import WORKING_DIRECTORY
 from security import is_permitted_path
 from google.genai import types
 
 
 @is_permitted_path("write")
-def write_file(working_directory, file_path, contents):
-    file_path = os.path.join(working_directory, file_path)
+def write_file(file_path, contents):
+    file_path = os.path.join(WORKING_DIRECTORY, file_path)
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(contents)
         return (

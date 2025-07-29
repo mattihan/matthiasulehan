@@ -1,13 +1,13 @@
 import os
 import security
 from google.genai import types
-from config import TEXT_LIMIT
+from config import TEXT_LIMIT, WORKING_DIRECTORY
 
 
 @security.is_permitted_path("read")
 @security.is_file
-def get_file_contents(working_directory, file_path):
-    file_path = os.path.join(working_directory, file_path)
+def get_file_contents(file_path):
+    file_path = os.path.join(WORKING_DIRECTORY, file_path)
     try:
         with open(file_path, encoding="utf-8") as contents:
             text = contents.read()

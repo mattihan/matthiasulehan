@@ -1,100 +1,38 @@
 import os
 import sys
-from config import SYSTEM_PROMPT
+from config import SYSTEM_PROMPT, MAX_ITERATIONS
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from functions.get_files_info import schema_get_files_info, get_files_info
-from functions.get_file_contents import schema_get_file_contents, get_file_contents
-from functions.write_file import schema_write_file, write_file
-from functions.run_python_file import schema_run_python_file, run_python_file
-
-
-load_dotenv()
-api_key = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
-verbose_flag = False
-user_prompts = []
-available_functions = types.Tool(
-    function_declarations=[
-        schema_get_files_info,
-        schema_get_file_contents,
-        schema_write_file,
-        schema_run_python_file,
-    ]
-)
+from call_function import call_function, available_functions
 
 
 def add_verbose(func):
-    def verbosify(response):
-        if verbose_flag:
-            print(f"User prompt: {user_prompts}")
+    def verbosify(response, verbose):
+        if verbose:
             print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
             print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-        func(response, verbose=verbose_flag)
+        return func(response, verbose)
 
     return verbosify
 
 
 @add_verbose
-def print_response(response, verbose=False):
-    if response.function_calls:
-        for call in response.function_calls:
-            response = call_function(call, verbose=verbose)
-            if (
-                not len(response.parts)
-                or not response.parts[0].function_response.response
-            ):
-                raise Exception(
-                    "There was no response from call_function or it is malformed"
-                )
-            elif verbose:
-                print(f"-> {response.parts[0].function_response.response}")
-    else:
-        print(response.text)
-
-
-func_dict = {
-    "get_files_info": get_files_info,
-    "get_file_contents": get_file_contents,
-    "write_file": write_file,
-    "run_python_file": run_python_file,
-}
-
-
-def call_function(func, verbose=False):
-    call = (
-        f" - Calling function: {func.name}"
-        if not verbose
-        else f"Calling function: {func.name}({func.args})"
-    )
-    print(call)
-
-    if func.name not in func_dict:
-        return types.Content(
-            role="tool",
-            parts=[
-                types.Part.from_function_response(
-                    name=func.name, response={"error": f"Unknown function: {func.name}"}
-                )
-            ],
-        )
-    result = func_dict[func.name]("./calculator", **func.args)
-
-    return types.Content(
-        role="tool",
-        parts=[
-            types.Part.from_function_response(
-                name=func.name, response={"result": result}
+def handle_function_calls(response, verbose):
+    new_messages = []
+    for call in response.function_calls:
+        result = call_function(call, verbose)
+        if not result.parts or not result.parts[0].function_response.response:
+            raise SystemError(
+                "There was no response from call_function or it is malformed"
             )
-        ],
-    )
+        if verbose:
+            print(f"-> {result.parts[0].function_response.response}")
+        new_messages.append(result.parts[0])
+    return types.Content(role="tool", parts=new_messages)
 
 
-def main():
-    messages = [
-        types.Content(role="user", parts=[types.Part(text=" ".join(user_prompts))])
-    ]
+def generate_content(client, messages):
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
         contents=messages,
@@ -102,7 +40,58 @@ def main():
             system_instruction=SYSTEM_PROMPT, tools=[available_functions]
         ),
     )
-    print_response(response)
+
+    return response
+
+
+def query_bot(client, messages, verbose, limit=0):
+    limit += 1
+    if limit > MAX_ITERATIONS:
+        print("Error: Maximum interations reached:", MAX_ITERATIONS)
+        sys.exit(1)
+    response = generate_content(client, messages)
+    new_messages = messages.copy()
+    if response.candidates:
+        for candidate in response.candidates:
+            new_messages.append(candidate.content)
+    if not response.function_calls:
+        return response.text
+    new_messages.append(handle_function_calls(response, verbose))
+    return query_bot(
+        client,
+        new_messages,
+        verbose,
+        limit,
+    )
+
+
+def main():
+    load_dotenv()
+    api_key = os.environ.get("GEMINI_API_KEY")
+    client = genai.Client(api_key=api_key)
+    verbose_flag = False
+    user_prompts = []
+
+    for arg in sys.argv[1:]:
+        match arg:
+            case "--verbose":
+                print("Setting verbose_flag=True")
+                verbose_flag = True
+                continue
+
+            case _:
+                user_prompts.append(arg)
+    if verbose_flag:
+        print(f"User prompt: {" ".join(user_prompts)}")
+    initial_messages = [
+        types.Content(role="user", parts=[types.Part(text=" ".join(user_prompts))])
+    ]
+
+    try:
+        response = query_bot(client, initial_messages, verbose_flag)
+        print(response)
+    except Exception as e:
+        print("Error: ", e)
 
 
 if __name__ == "__main__":
@@ -114,12 +103,4 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    for arg in sys.argv[1:]:
-        match arg:
-            case "--verbose":
-                verbose_flag = True
-                continue
-
-            case _:
-                user_prompts.append(arg)
     main()

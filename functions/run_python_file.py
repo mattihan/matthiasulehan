@@ -1,3 +1,4 @@
+from config import WORKING_DIRECTORY
 import security
 import os
 import subprocess
@@ -7,14 +8,14 @@ from google.genai import types
 @security.is_permitted_path("execute")
 @security.exists
 @security.is_python_file
-def run_python_file(working_directory, file_path, args=[]):
-    absolute_path = os.path.join(os.path.abspath(working_directory), file_path)
+def run_python_file(file_path, args=[]):
+    absolute_path = os.path.join(WORKING_DIRECTORY, file_path)
     try:
         completed = subprocess.run(
             ["python", absolute_path, *args],
             timeout=30,
             capture_output=True,
-            cwd=os.path.abspath(working_directory),
+            cwd=os.path.abspath(WORKING_DIRECTORY),
             text=True,
         )
     except Exception as e:

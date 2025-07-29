@@ -1,18 +1,13 @@
 import os
 import security
 from google.genai import types
+from config import WORKING_DIRECTORY
 
 
 @security.is_permitted_path("list")
 @security.is_dir
-def get_files_info(working_directory, directory="."):
-    absolute_path = os.path.join(working_directory, directory)
-    if not os.path.abspath(absolute_path).startswith(
-        os.path.abspath(working_directory)
-    ):
-        return f'Error: Cannot list "{directory}" because it is outside the permitted working directory'
-    if not os.path.isdir(absolute_path):
-        return f'Error: "{directory}" is not a directory'
+def get_files_info(directory="."):
+    absolute_path = os.path.join(WORKING_DIRECTORY, directory)
     try:
         files = []
         for file in os.listdir(absolute_path):

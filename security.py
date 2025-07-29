@@ -1,4 +1,5 @@
 import os
+from config import WORKING_DIRECTORY
 
 
 class SecurityFunctionArgs:
@@ -15,7 +16,6 @@ def security_decorator_generator(
 ):
     def outer(func):
         def inner(*args, **kwargs):
-            working_directory = args[0]
             if len(args) > 1:
                 file_path = args[1]
             elif "file_path" in kwargs:
@@ -23,12 +23,10 @@ def security_decorator_generator(
             elif "directory" in kwargs:
                 file_path = kwargs["directory"]
             else:
-                raise ValueError(
-                    f"Cannot determine path for security check: {args}, {kwargs}"
-                )
-            absolute_path = os.path.abspath(os.path.join(working_directory, file_path))
-            if not rule(working_directory, file_path, absolute_path):
-                return error(working_directory, file_path, absolute_path)
+                file_path = "."
+            absolute_path = os.path.abspath(os.path.join(WORKING_DIRECTORY, file_path))
+            if not rule(WORKING_DIRECTORY, file_path, absolute_path):
+                return error(WORKING_DIRECTORY, file_path, absolute_path)
             return func(*args, **kwargs)
 
         return inner
@@ -41,7 +39,7 @@ exists = security_decorator_generator(
     lambda *args: f'Error: File "{args[SecurityFunctionArgs.FILE_PATH]}" not found',
 )
 is_python_file = security_decorator_generator(
-    lambda *args: args[SecurityFunctionArgs.FILE_PATH][::-1][:3][::-1] == ".py",
+    lambda *args: args[SecurityFunctionArgs.FILE_PATH][-3:] == ".py",
     lambda *args: f'Error: "{args[1]} is not a Python file',
 )
 
