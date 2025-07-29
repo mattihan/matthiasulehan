@@ -7,7 +7,7 @@ from config import WORKING_DIRECTORY
 @security.is_permitted_path("list")
 @security.is_dir
 def get_files_info(directory="."):
-    absolute_path = os.path.join(WORKING_DIRECTORY, directory)
+    absolute_path = os.path.join(os.path.abspath(WORKING_DIRECTORY), directory)
     try:
         files = []
         for file in os.listdir(absolute_path):

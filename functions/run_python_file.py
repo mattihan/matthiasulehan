@@ -9,7 +9,7 @@ from google.genai import types
 @security.exists
 @security.is_python_file
 def run_python_file(file_path, args=[]):
-    absolute_path = os.path.join(WORKING_DIRECTORY, file_path)
+    absolute_path = os.path.join(os.path.abspath(WORKING_DIRECTORY), file_path)
     try:
         completed = subprocess.run(
             ["python", absolute_path, *args],
