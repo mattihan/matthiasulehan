@@ -4,7 +4,7 @@ from google.genai import types
 from config import TEXT_LIMIT
 
 
-@security.is_permitted_path
+@security.is_permitted_path("read")
 @security.is_file
 def get_file_contents(working_directory, file_path):
     file_path = os.path.join(working_directory, file_path)

@@ -3,12 +3,12 @@ from security import is_permitted_path
 from google.genai import types
 
 
-@is_permitted_path
+@is_permitted_path("write")
 def write_file(working_directory, file_path, contents):
     file_path = os.path.join(working_directory, file_path)
-    with open(file_path, "w") as file:
+    with open(file_path, "w", encoding="utf-8") as file:
         file.write(contents)
-        print(
+        return (
             f'Successfully wrote to "{file_path}" ({len(contents)} characters written)'
         )
 

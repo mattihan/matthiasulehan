@@ -3,7 +3,7 @@ import security
 from google.genai import types
 
 
-@security.is_permitted_path
+@security.is_permitted_path("list")
 @security.is_dir
 def get_files_info(working_directory, directory="."):
     absolute_path = os.path.join(working_directory, directory)

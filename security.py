@@ -15,7 +15,17 @@ def security_decorator_generator(
 ):
     def outer(func):
         def inner(*args, **kwargs):
-            working_directory, file_path = args[:2]
+            working_directory = args[0]
+            if len(args) > 1:
+                file_path = args[1]
+            elif "file_path" in kwargs:
+                file_path = kwargs["file_path"]
+            elif "directory" in kwargs:
+                file_path = kwargs["directory"]
+            else:
+                raise ValueError(
+                    f"Cannot determine path for security check: {args}, {kwargs}"
+                )
             absolute_path = os.path.abspath(os.path.join(working_directory, file_path))
             if not rule(working_directory, file_path, absolute_path):
                 return error(working_directory, file_path, absolute_path)
